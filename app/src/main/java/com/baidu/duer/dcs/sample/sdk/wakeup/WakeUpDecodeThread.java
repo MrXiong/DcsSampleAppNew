@@ -17,6 +17,7 @@
 package com.baidu.duer.dcs.sample.sdk.wakeup;
 
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
@@ -35,7 +36,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class WakeUpDecodeThread extends Thread {
     private static final String TAG = WakeUpDecodeThread.class.getSimpleName();
-    private  static Context context;
+    private static Context context;
     // 唤醒成功
     private static final int WAKEUP_SUCCEED = 1;
     // 唤醒词位置
@@ -59,14 +60,15 @@ public class WakeUpDecodeThread extends Thread {
     }
 
 
-    static class ToastHandle extends Handler{
+    static class ToastHandle extends Handler {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            Toast.makeText(context, "当前网络连接失败,请稍后重试", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "检查一下网络之后再试试吧", Toast.LENGTH_SHORT).show();
+            MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.net_error);
+            mediaPlayer.start();
         }
     }
-
 
 
     /**

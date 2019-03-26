@@ -571,7 +571,8 @@ public abstract class SDKBaseActivity extends AppCompatActivity implements
 
             @Override
             public void onFailed(String errorMessage) {
-                Toast.makeText(SDKBaseActivity.this.getApplicationContext(), "登录失败", Toast
+                boolean net = NetWorkUtil.isNetworkConnected(DcsSampleApplication.getContext());
+                Toast.makeText(SDKBaseActivity.this.getApplicationContext(), net ? "登录失败" : "登录失败，请检查网络状况", Toast
                         .LENGTH_SHORT).show();
                 Log.e(TAG, "login onFailed. ");
                 finish();
