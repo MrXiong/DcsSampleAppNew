@@ -22,7 +22,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
-import com.baidu.duer.dcs.api.config.DcsConfig;
 import com.baidu.duer.dcs.sample.R;
 import com.baidu.duer.dcs.sample.sdk.DcsSampleApplication;
 import com.baidu.duer.dcs.util.util.NetWorkUtil;
@@ -93,60 +92,45 @@ public class WakeUpDecodeThread extends Thread {
         isStart = false;
     }
 
+
+    /**
+     * 1、开启while循环监听声音进行唤醒，不唤醒不跳出循环
+     * 2、while循环中不断的从Deque队列获取声音数据，如果大于0，就去执行唤醒（wakeUpDecode()）操作
+     * 3、如果返回1，代表唤醒成功，isWakeUp = true ,isStart = false并break跳出循环
+     * 4、
+     */
+
     @Override
     public void run() {
         super.run();
-        LogUtil.i(TAG, "----------------------------------------------------------------------wakeup wakeUpDecode start11111     " + isStart);
+
         while (isStart) {
             try {
-
                 byte[] data = linkedBlockingDeque.take();
-                // 暂时不检测vad
-                // int volume = calculateVolume(data, 16);
-                // LogUtil.i(TAG, "wakeup audioRecord Volume:" + volume);
-                // if (volume <= 0) {
-                //  continue;
-                // }
-
                 if (data.length > 0) {
-                    // 是否为最后一帧数据
                     boolean isEnd = false;
                     short[] arr = byteArray2ShortArray(data, data.length / 2);
-                    int ret = wakeUpNative.wakeUpDecode(
-                            arr,
-                            arr.length,
-                            "",
-                            1,
-                            -1,
-                            true,
-                            voiceOffset++,
-                            isEnd
-                    );
-                    // 唤醒成功
+                    int ret = wakeUpNative.wakeUpDecode(arr, arr.length, "", 1, -1, true, voiceOffset++, isEnd);
+
+                    // ret返回1表示唤醒成功，其他表示未唤醒
                     if (ret == WAKEUP_SUCCEED) {
 
                         if (!NetWorkUtil.isNetworkConnected(DcsSampleApplication.getContext())) {
-                            com.baidu.duer.dcs.sample.sdk.wakeup.LogUtil.i(TAG, "网络异常 000");
                             toastHandle.sendEmptyMessage(1);
                             continue;
                         }
 
-
-                        LogUtil.i(TAG, "wakeup wakeUpDecode ret:" + ret);
                         isWakeUp = true;
                         stopWakeUp();
-                        //LogUtil.i(TAG, "wakeup wakeUpDecode succeed !!");
                         break;
                     }
+                    //Log.i("hhh", "ret: " + ret);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        //LogUtil.i(TAG, "wakeup after linkedBlockingDeque size:" + linkedBlockingDeque.size());
-        LogUtil.i(TAG, "--------------------isWakeUp === " + isWakeUp);
         if (isWakeUp) {
-            LogUtil.i(TAG, "--------------------listener === " + listener);
             if (listener != null) {
                 handler.post(new Runnable() {
                     @Override
@@ -159,8 +143,8 @@ public class WakeUpDecodeThread extends Thread {
         // 重置
         voiceOffset = 0;
         isWakeUp = false;
-        LogUtil.i(TAG, "--------------------重置isWakeUp === " + isWakeUp);
     }
+
 
     /**
      * 将byte数组转为short数组
@@ -177,68 +161,6 @@ public class WakeUpDecodeThread extends Thread {
         return retVal;
     }
 
-    /**
-     * 根据输入的音量大小来判断用户是否有语音输入
-     *
-     * @param var0 原始音频数据
-     * @param var1 音频数据格式位PCM，16位每个样本，比如如果音频数据格式设为AudioFormat.ENCODING_PCM_16BIT，则参数传16
-     * @return >0 代表有音频输入
-     */
-    private int calculateVolume(byte[] var0, int var1) {
-        int[] var3 = null;
-        int var4 = var0.length;
-        int var2;
-        if (var1 == 8) {
-            var3 = new int[var4];
-            for (var2 = 0; var2 < var4; ++var2) {
-                var3[var2] = var0[var2];
-            }
-        } else if (var1 == 16) {
-            var3 = new int[var4 / 2];
-            for (var2 = 0; var2 < var4 / 2; ++var2) {
-                byte var5 = var0[var2 * 2];
-                byte var6 = var0[var2 * 2 + 1];
-                int var13;
-                if (var5 < 0) {
-                    var13 = var5 + 256;
-                } else {
-                    var13 = var5;
-                }
-                short var7 = (short) (var13 + 0);
-                if (var6 < 0) {
-                    var13 = var6 + 256;
-                } else {
-                    var13 = var6;
-                }
-                var3[var2] = (short) (var7 + (var13 << 8));
-            }
-        }
-        int[] var8 = var3;
-        if (var3 != null && var3.length != 0) {
-            float var10 = 0.0F;
-            for (int var11 = 0; var11 < var8.length; ++var11) {
-                var10 += (float) (var8[var11] * var8[var11]);
-            }
-            var10 /= (float) var8.length;
-            float var12 = 0.0F;
-            for (var4 = 0; var4 < var8.length; ++var4) {
-                var12 += (float) var8[var4];
-            }
-            var12 /= (float) var8.length;
-            var4 = (int) (Math.pow(2.0D, (double) (var1 - 1)) - 1.0D);
-            double var14 = Math.sqrt((double) (var10 - var12 * var12));
-            int var9;
-            if ((var9 = (int) (10.0D * Math.log10(var14 * 10.0D * Math.sqrt(2.0D) / (double) var4 + 1.0D))) < 0) {
-                var9 = 0;
-            }
-            if (var9 > 10) {
-                var9 = 10;
-            }
-            return var9;
-        } else {
-            return 0;
-        }
-    }
 
     private IWakeUpListener listener;
 

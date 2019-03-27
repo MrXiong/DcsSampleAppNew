@@ -18,7 +18,7 @@ public class DroiWakeUp extends BaseWakeup {
     // 初始化唤醒词成功
     private static final int WAKEUP_INIT_SUCCEED = 0;
     // 唤醒词
-    public static final String WAKEUP_WORD = "小鹿小鹿";
+    public static final String WAKEUP_WORD = "小度小度";
     // 唤醒词声学模型模型文件
     private static final String WAKEUP_FILENAME = "libbdEasrS1MergeNormal.so";
 
@@ -52,7 +52,9 @@ public class DroiWakeUp extends BaseWakeup {
             @Override
             public void onData(byte[] bytes) {
                 try {
+                    //LogUtil.i(TAG, "-----  "+bytes.length+" "+linkedBlockingDeque.size());
                     linkedBlockingDeque.add(bytes);
+                    //LogUtil.i(TAG, "^^^^^^^^"+bytes.length+" "+linkedBlockingDeque.size());
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -61,7 +63,7 @@ public class DroiWakeUp extends BaseWakeup {
 
             @Override
             public void onError(String s) {
-
+                LogUtil.i(TAG, "-----onError: "+s);
             }
         };
     }
@@ -88,7 +90,7 @@ public class DroiWakeUp extends BaseWakeup {
 
     @Override
     public void startWakeup() {
-        LogUtil.i(TAG, "*************   startWakeup   ***********");
+        stopWakeup(null); //强制回调
         linkedBlockingDeque.clear();
         if (audioRecorder != null) {
             audioRecorder.addRecorderListener(recorderListener);
@@ -132,6 +134,7 @@ public class DroiWakeUp extends BaseWakeup {
             @Override
             public void onWakeUpSucceed() {
                 // 唤醒成功
+                LogUtil.i(TAG, "-----唤醒成功++++");
                 fireOnWakeUpSucceed(wakeUpConfig.getWakeUpWords().get(0));
             }
         });
@@ -140,7 +143,7 @@ public class DroiWakeUp extends BaseWakeup {
 
     @Override
     public void stopWakeup(IStopWakeupListener iStopWakeupListener) {
-        LogUtil.d(TAG, "wakeup stopWakeup!");
+        LogUtil.i(TAG, "wakeup stopWakeup!!!!!!!");
         if (this.wakeUpDecodeThread != null) {
             this.wakeUpDecodeThread.stopWakeUp();
         }

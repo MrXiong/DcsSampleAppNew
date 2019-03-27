@@ -146,6 +146,7 @@ public abstract class SDKBaseActivity extends AppCompatActivity implements
     protected TextView textViewRenderVoiceInputText;
     private IDialogStateListener dialogStateListener;
     private IDialogStateListener.DialogState currentDialogState = IDialogStateListener.DialogState.IDLE;
+    private BaseWakeup mWakeup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -270,14 +271,16 @@ public abstract class SDKBaseActivity extends AppCompatActivity implements
             if (errorCode.error == DcsErrorCode.VOICE_REQUEST_EXCEPTION) {
                 if (errorCode.subError == DcsErrorCode.NETWORK_UNAVAILABLE) {
                     Toast.makeText(SDKBaseActivity.this,
-                            "网络不可用1",
+                            "网络不可用",
                             Toast.LENGTH_SHORT)
                             .show();
                 } else {
+                    com.baidu.duer.dcs.sample.sdk.wakeup.LogUtil.i(TAG, "errorCode.error:  "+errorCode.error);
                     Toast.makeText(SDKBaseActivity.this,
                             getResources().getString(R.string.voice_err_msg),
                             Toast.LENGTH_SHORT)
                             .show();
+
                 }
 
             } else if (errorCode.error == DcsErrorCode.LOGIN_FAILED) {
@@ -387,7 +390,7 @@ public abstract class SDKBaseActivity extends AppCompatActivity implements
         IOauth oauth = new SilentLoginImpl(CLIENT_ID);
         // 唤醒单独开启唤醒进程；  如果不需要将唤醒放入一个单独进程，可以使用KittWakeUpImpl
         //final BaseWakeup wakeup = new KittWakeUpServiceImpl(audioRecorder);
-        final BaseWakeup wakeup = new DroiWakeUp(audioRecorder);
+        mWakeup = new DroiWakeUp(audioRecorder);
         // 百度语音团队的离线asr和百度语音团队的唤醒，2个so库冲突，暂时不要用WakeupImpl实现的唤醒功能！！
 //        final BaseWakeup wakeup = new WakeupImpl();
         final IWakeupProvider wakeupProvider = new IWakeupProvider() {
@@ -439,7 +442,7 @@ public abstract class SDKBaseActivity extends AppCompatActivity implements
 
             @Override
             public BaseWakeup wakeupImpl() {
-                return wakeup;
+                return mWakeup;
             }
 
             @Override
