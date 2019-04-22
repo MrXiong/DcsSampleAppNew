@@ -18,7 +18,7 @@ public class DroiWakeUp extends BaseWakeup {
     // 初始化唤醒词成功
     private static final int WAKEUP_INIT_SUCCEED = 0;
     // 唤醒词
-    public static final String WAKEUP_WORD = "小度小度";
+    public static final String WAKEUP_WORD = "小艾小艾";
     // 唤醒词声学模型模型文件
     private static final String WAKEUP_FILENAME = "libbdEasrS1MergeNormal.so";
 
